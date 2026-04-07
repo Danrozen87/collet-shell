@@ -6,7 +6,6 @@
 
 use gtk::prelude::*;
 use gtk_layer_shell::LayerShell;
-use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
 const CONTROL_BAR_HTML: &str = r#"<!DOCTYPE html>
 <html>
@@ -115,17 +114,14 @@ pub fn create() -> gtk::Window {
 
     eprintln!("[collet-shell] Control bar surface created");
 
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    window.add(&container);
+    let label = gtk::Label::new(Some("  📶  │  12:00  │  ⏻  "));
+    label.set_margin_start(12);
+    label.set_margin_end(12);
+    label.set_margin_top(4);
+    label.set_margin_bottom(4);
+    window.add(&label);
 
-    let _webview = WebViewBuilder::new()
-        .with_transparent(true)
-        .with_html(CONTROL_BAR_HTML)
-        .with_ipc_handler(|msg: wry::http::Request<String>| {
-            eprintln!("[collet-shell] Control bar IPC: {}", msg.body());
-        })
-        .build_gtk(&container)
-        .expect("Failed to create control bar webview");
+    eprintln!("[collet-shell] Control bar content added");
 
     window
 }

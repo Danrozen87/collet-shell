@@ -6,7 +6,6 @@
 
 use gtk::prelude::*;
 use gtk_layer_shell::LayerShell;
-use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
 /// The dock HTML — rendered from Collet design tokens.
 /// In production, this comes from the Collet component library.
@@ -124,19 +123,32 @@ pub fn create() -> gtk::Window {
 
     eprintln!("[collet-shell] Dock surface created");
 
-    // Create container for the webview
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    // Try native GTK label first to prove layer-shell works
+    // Webview added once layer-shell rendering is confirmed
+    let container = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+
+    let label = gtk::Label::new(Some("  📁  🌐  ⌨  📝  📧  │  🔍  │  ⏻  "));
+    label.set_margin_start(16);
+    label.set_margin_end(16);
+    label.set_margin_top(8);
+    label.set_margin_bottom(8);
+    container.add(&label);
+
+    // Style with CSS
+    let css = gtk::CssProvider::new();
+    css.load_from_data(b"
+        window { background-color: rgba(30, 30, 30, 0.85); border-radius: 16px; }
+        label { color: #e0e0e0; font-size: 18px; font-family: 'Geist', sans-serif; }
+    ");
+    gtk::StyleContext::add_provider_for_screen(
+        &gdk::Screen::default().expect("No screen"),
+        &css,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+
     window.add(&container);
 
-    // Build wry webview inside the container
-    let _webview = WebViewBuilder::new()
-        .with_transparent(true)
-        .with_html(DOCK_HTML)
-        .with_ipc_handler(|msg: wry::http::Request<String>| {
-            eprintln!("[collet-shell] IPC: {}", msg.body());
-        })
-        .build_gtk(&container)
-        .expect("Failed to create dock webview");
+    eprintln!("[collet-shell] Dock content added");
 
     window
 }
