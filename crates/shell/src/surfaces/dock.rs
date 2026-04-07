@@ -118,10 +118,11 @@ pub fn create() -> gtk::Window {
     window.set_exclusive_zone(0); // Float over content, don't push windows
     window.set_namespace("collet-dock");
 
-    // Window: transparent, borderless
+    // Window: borderless, visible background for debugging
     window.set_decorated(false);
-    window.set_app_paintable(true);
-    window.set_default_size(600, 64);
+    window.set_default_size(600, 80);
+
+    eprintln!("[collet-shell] Dock surface created");
 
     // Create container for the webview
     let container = gtk::Box::new(gtk::Orientation::Vertical, 0);

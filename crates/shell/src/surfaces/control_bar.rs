@@ -109,10 +109,11 @@ pub fn create() -> gtk::Window {
     window.set_exclusive_zone(0);
     window.set_namespace("collet-control-bar");
 
-    // Window: transparent, borderless, small
+    // Window: borderless, visible for debugging
     window.set_decorated(false);
-    window.set_app_paintable(true);
-    window.set_default_size(220, 40);
+    window.set_default_size(250, 48);
+
+    eprintln!("[collet-shell] Control bar surface created");
 
     let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     window.add(&container);
