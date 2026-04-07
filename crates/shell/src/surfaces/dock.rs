@@ -124,8 +124,7 @@ pub fn create() -> gtk::Window {
     window.set_default_size(600, 64);
 
     // Create container for the webview
-    let container = gtk::Fixed::new();
-    container.set_size_request(600, 64);
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     window.add(&container);
 
     // Build wry webview inside the container

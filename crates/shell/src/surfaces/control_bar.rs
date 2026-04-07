@@ -114,8 +114,7 @@ pub fn create() -> gtk::Window {
     window.set_app_paintable(true);
     window.set_default_size(220, 40);
 
-    let container = gtk::Fixed::new();
-    container.set_size_request(220, 40);
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     window.add(&container);
 
     let _webview = WebViewBuilder::new()
