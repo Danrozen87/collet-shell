@@ -1,30 +1,68 @@
-//! Collet OS Shell — Proof of Concept
+//! Collet OS Shell
 //!
-//! Creates two layer-shell surfaces with wry webviews:
-//! 1. Control Bar (top-right pill) — system status
-//! 2. Dock (bottom-center) — app launcher + search palette
-//!
-//! This is the 50-line proof-of-concept to validate:
-//! - gtk-layer-shell + wry webview initialization timing
-//! - Transparent, borderless layer surfaces on COSMIC/Wayland
-//! - HTML rendering from Collet design system tokens
+//! On Linux/Wayland: layer-shell surfaces (dock, control bar)
+//! On macOS: windowed preview for development (same HTML/CSS)
 
+mod render;
+
+#[cfg(target_os = "linux")]
 mod surfaces;
 
-use gtk::prelude::*;
-
+#[cfg(target_os = "linux")]
 fn main() {
+    use gtk::prelude::*;
+
     gtk::init().expect("Failed to initialize GTK");
 
-    // Create the dock surface (bottom, centered)
     let dock = surfaces::dock::create();
-
-    // Create the control bar surface (top-right, pill)
     let control_bar = surfaces::control_bar::create();
 
-    // Show both surfaces
     dock.show_all();
     control_bar.show_all();
 
     gtk::main();
+}
+
+/// macOS preview — two windows showing dock and control bar.
+/// Same HTML/CSS/components as production Linux surfaces.
+#[cfg(not(target_os = "linux"))]
+fn main() {
+    use tao::event::{Event, WindowEvent};
+    use tao::event_loop::{ControlFlow, EventLoop};
+    use tao::window::WindowBuilder;
+    use wry::WebViewBuilder;
+
+    let event_loop = EventLoop::new();
+
+    // Full desktop preview — dock + control bar in one window
+    let window = WindowBuilder::new()
+        .with_title("Collet OS — Shell Preview")
+        .with_inner_size(tao::dpi::LogicalSize::new(1280.0, 800.0))
+        .with_resizable(true)
+        .build(&event_loop)
+        .unwrap();
+
+    let preview_html = render::render_preview();
+
+    // Debug: dump HTML to file for Safari inspection
+    std::fs::write("preview/live.html", &preview_html).ok();
+    let _webview = WebViewBuilder::new()
+        .with_html(&preview_html)
+        .with_ipc_handler(|msg: wry::http::Request<String>| {
+            eprintln!("[collet-shell] IPC: {}", msg.body());
+        })
+        .build(&window)
+        .unwrap();
+
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        if let Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        } = event
+        {
+            *control_flow = ControlFlow::Exit;
+        }
+    });
 }

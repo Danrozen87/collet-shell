@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    font-family: 'Geist', system-ui, sans-serif;
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px;
+    height: 100vh;
+  }
+  .bar {
+    background: rgba(40, 40, 40, 0.80);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 99px;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    color: #e0e0e0;
+    font-size: 13px;
+    height: fit-content;
+  }
+  .sep { width: 1px; height: 14px; background: rgba(255,255,255,0.08); }
+  .clock { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .icon { cursor: pointer; transition: opacity 150ms; }
+  .icon:hover { opacity: 0.6; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <span class="icon">📶</span>
+    <span class="sep"></span>
+    <span class="clock" id="c">12:00</span>
+    <span class="sep"></span>
+    <span class="icon">⏻</span>
+  </div>
+  <script>
+    function u(){const n=new Date();document.getElementById('c').textContent=
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+    u();setInterval(u,1000);
+  </script>
+</body>
+</html>
