@@ -117,9 +117,9 @@ pub fn create() -> gtk::Window {
     window.set_default_size(220, 40);
 
     // Transparency
-    if let Some(screen) = window.screen() {
-        if let Some(visual) = screen.rgba_visual() {
-            window.set_visual(Some(&visual));
+    if let Some(screen) = gtk::prelude::WidgetExt::screen(&window) {
+        if let Some(visual) = gdk::prelude::ScreenExt::rgba_visual(&screen) {
+            gtk::prelude::WidgetExt::set_visual(&window, Some(&visual));
         }
     }
 
