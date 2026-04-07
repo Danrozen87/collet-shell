@@ -1,154 +1,94 @@
-//! Dock surface — bottom-center, expandable, the primary interaction surface.
-//!
-//! Layer: TOP (above windows, below overlays)
-//! Anchor: bottom-center, not edge-to-edge
-//! Behavior: compact at rest, expands vertically for search/AI
+//! Dock surface — bottom-center, expandable.
 
 use gtk::prelude::*;
 use gtk_layer_shell::LayerShell;
+use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
-/// The dock HTML — rendered from Collet design tokens.
-/// In production, this comes from the Collet component library.
-/// For the PoC, inline HTML with the design system CSS variables.
 const DOCK_HTML: &str = r#"<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
   :root {
-    --cx-color-bg: oklch(0.145 0.000 0.0);
-    --cx-color-surface: oklch(0.185 0.000 0.0);
-    --cx-color-text: oklch(0.880 0.000 0.0);
-    --cx-color-text-muted: oklch(0.520 0.000 0.0);
-    --cx-color-border: oklch(0.290 0.000 0.0);
     --cx-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: transparent;
-    font-family: 'Geist', 'Inter', system-ui, sans-serif;
+    font-family: 'Geist', system-ui, sans-serif;
     display: flex;
     justify-content: center;
     align-items: flex-end;
     height: 100vh;
     padding-bottom: 8px;
-    -webkit-user-select: none;
-    user-select: none;
   }
-
   .dock {
-    background: oklch(0.145 0.000 0.0 / 0.85);
+    background: rgba(30, 30, 30, 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid oklch(1.0 0.0 0.0 / 0.06);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 16px;
     padding: 8px 16px;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 300ms var(--cx-ease-spring);
-    box-shadow: 0 8px 32px oklch(0.0 0.0 0.0 / 0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   }
-
   .dock-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: 10px;
-    background: var(--cx-color-surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--cx-color-text);
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
     font-size: 18px;
     cursor: pointer;
     transition: transform 180ms var(--cx-ease-spring);
   }
-
-  .dock-icon:hover {
-    transform: scale(1.15);
-  }
-
-  .dock-icon:active {
-    transform: scale(0.95);
-    transition-duration: 60ms;
-  }
-
-  .dock-separator {
-    width: 1px;
-    height: 24px;
-    background: var(--cx-color-border);
-    margin: 0 4px;
-  }
-
-  .dock-label {
-    color: var(--cx-color-text-muted);
-    font-size: 11px;
-    letter-spacing: 0.3px;
-  }
+  .dock-icon:hover { transform: scale(1.15); }
+  .dock-icon:active { transform: scale(0.95); transition-duration: 60ms; }
+  .sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 4px; }
 </style>
 </head>
 <body>
-  <nav class="dock" role="toolbar" aria-label="Collet Dock">
-    <div class="dock-icon" title="Files">📁</div>
-    <div class="dock-icon" title="Browser">🌐</div>
-    <div class="dock-icon" title="Terminal">⌨</div>
-    <div class="dock-icon" title="Editor">📝</div>
-    <div class="dock-icon" title="Mail">📧</div>
-    <div class="dock-separator"></div>
-    <div class="dock-icon" title="Search">🔍</div>
-    <div class="dock-separator"></div>
-    <div class="dock-icon" title="Power">⏻</div>
+  <nav class="dock">
+    <div class="dock-icon">📁</div>
+    <div class="dock-icon">🌐</div>
+    <div class="dock-icon">⌨</div>
+    <div class="dock-icon">📝</div>
+    <div class="dock-icon">📧</div>
+    <div class="sep"></div>
+    <div class="dock-icon">🔍</div>
+    <div class="sep"></div>
+    <div class="dock-icon">⏻</div>
   </nav>
 </body>
 </html>"#;
 
-/// Create the dock layer-shell surface with a wry webview.
 pub fn create() -> gtk::Window {
     let window = gtk::Window::new(gtk::WindowType::Toplevel);
 
-    // Layer shell: bottom of screen, centered, floating
     window.init_layer_shell();
     window.set_layer(gtk_layer_shell::Layer::Top);
     window.set_anchor(gtk_layer_shell::Edge::Bottom, true);
     window.set_anchor(gtk_layer_shell::Edge::Left, false);
     window.set_anchor(gtk_layer_shell::Edge::Right, false);
-    window.set_exclusive_zone(0); // Float over content, don't push windows
+    window.set_exclusive_zone(0);
     window.set_namespace("collet-dock");
 
-    // Window: borderless, visible background for debugging
     window.set_decorated(false);
     window.set_default_size(600, 80);
 
-    eprintln!("[collet-shell] Dock surface created");
-
-    // Try native GTK label first to prove layer-shell works
-    // Webview added once layer-shell rendering is confirmed
-    let container = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-
-    let label = gtk::Label::new(Some("  📁  🌐  ⌨  📝  📧  │  🔍  │  ⏻  "));
-    label.set_margin_start(16);
-    label.set_margin_end(16);
-    label.set_margin_top(8);
-    label.set_margin_bottom(8);
-    container.add(&label);
-
-    // Style with CSS
-    let css = gtk::CssProvider::new();
-    css.load_from_data(b"
-        window { background-color: rgba(30, 30, 30, 0.85); border-radius: 16px; }
-        label { color: #e0e0e0; font-size: 18px; font-family: 'Geist', sans-serif; }
-    ");
-    gtk::StyleContext::add_provider_for_screen(
-        &gdk::Screen::default().expect("No screen"),
-        &css,
-        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-    );
-
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     window.add(&container);
 
-    eprintln!("[collet-shell] Dock content added");
+    let _webview = WebViewBuilder::new()
+        .with_transparent(true)
+        .with_html(DOCK_HTML)
+        .with_ipc_handler(|msg: wry::http::Request<String>| {
+            eprintln!("[collet-shell] IPC: {}", msg.body());
+        })
+        .build_gtk(&container)
+        .expect("Failed to create dock webview");
 
+    eprintln!("[collet-shell] Dock webview created");
     window
 }
