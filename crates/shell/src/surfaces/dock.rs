@@ -115,7 +115,6 @@ pub fn create() -> gtk::Window {
     window.set_anchor(gtk_layer_shell::Edge::Bottom, true);
     window.set_anchor(gtk_layer_shell::Edge::Left, false);
     window.set_anchor(gtk_layer_shell::Edge::Right, false);
-    window.set_margin(gtk_layer_shell::Edge::Bottom, 8);
     window.set_exclusive_zone(0); // Float over content, don't push windows
     window.set_namespace("collet-dock");
 
@@ -123,13 +122,6 @@ pub fn create() -> gtk::Window {
     window.set_decorated(false);
     window.set_app_paintable(true);
     window.set_default_size(600, 64);
-
-    // Transparency
-    if let Some(screen) = gtk::prelude::WidgetExt::screen(&window) {
-        if let Some(visual) = gdk::prelude::ScreenExt::rgba_visual(&screen) {
-            gtk::prelude::WidgetExt::set_visual(&window, Some(&visual));
-        }
-    }
 
     // Create container for the webview
     let container = gtk::Fixed::new();

@@ -106,8 +106,6 @@ pub fn create() -> gtk::Window {
     window.set_layer(gtk_layer_shell::Layer::Overlay);
     window.set_anchor(gtk_layer_shell::Edge::Top, true);
     window.set_anchor(gtk_layer_shell::Edge::Right, true);
-    window.set_margin(gtk_layer_shell::Edge::Top, 8);
-    window.set_margin(gtk_layer_shell::Edge::Right, 12);
     window.set_exclusive_zone(0);
     window.set_namespace("collet-control-bar");
 
@@ -115,13 +113,6 @@ pub fn create() -> gtk::Window {
     window.set_decorated(false);
     window.set_app_paintable(true);
     window.set_default_size(220, 40);
-
-    // Transparency
-    if let Some(screen) = gtk::prelude::WidgetExt::screen(&window) {
-        if let Some(visual) = gdk::prelude::ScreenExt::rgba_visual(&screen) {
-            gtk::prelude::WidgetExt::set_visual(&window, Some(&visual));
-        }
-    }
 
     let container = gtk::Fixed::new();
     container.set_size_request(220, 40);
