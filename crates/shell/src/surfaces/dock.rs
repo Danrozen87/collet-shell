@@ -6,7 +6,7 @@
 
 use gtk::prelude::*;
 use gtk_layer_shell::LayerShell;
-use wry::WebViewBuilder;
+use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
 /// The dock HTML — rendered from Collet design tokens.
 /// In production, this comes from the Collet component library.
@@ -140,7 +140,7 @@ pub fn create() -> gtk::Window {
     let _webview = WebViewBuilder::new()
         .with_transparent(true)
         .with_html(DOCK_HTML)
-        .with_ipc_handler(|msg| {
+        .with_ipc_handler(|msg: wry::http::Request<String>| {
             eprintln!("[collet-shell] IPC: {}", msg.body());
         })
         .build_gtk(&container)

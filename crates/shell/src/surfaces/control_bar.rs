@@ -6,7 +6,7 @@
 
 use gtk::prelude::*;
 use gtk_layer_shell::LayerShell;
-use wry::WebViewBuilder;
+use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
 const CONTROL_BAR_HTML: &str = r#"<!DOCTYPE html>
 <html>
@@ -130,7 +130,7 @@ pub fn create() -> gtk::Window {
     let _webview = WebViewBuilder::new()
         .with_transparent(true)
         .with_html(CONTROL_BAR_HTML)
-        .with_ipc_handler(|msg| {
+        .with_ipc_handler(|msg: wry::http::Request<String>| {
             eprintln!("[collet-shell] Control bar IPC: {}", msg.body());
         })
         .build_gtk(&container)
