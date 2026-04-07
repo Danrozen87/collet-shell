@@ -1,0 +1,29 @@
+[package]
+name = "collet-shell"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Collet OS Shell — the operating system's face"
+
+[dependencies]
+# Webview engine (webkit2gtk on Linux)
+wry = "0.54"
+
+# GTK3 (matches wry's GTK dependency)
+gtk = "0.18"
+gdk = "0.18"
+glib = "0.20"
+
+# Layer shell (dock/panel positioning on Wayland)
+gtk-layer-shell = "0.8"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# IPC serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lints]
+workspace = true
