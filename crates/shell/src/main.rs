@@ -3,7 +3,9 @@
 //! On Linux/Wayland: layer-shell surfaces (dock, control bar)
 //! On macOS: windowed preview for development (same HTML/CSS)
 
+mod ipc;
 mod render;
+mod system;
 
 #[cfg(target_os = "linux")]
 mod surfaces;
@@ -46,10 +48,18 @@ fn main() {
 
     // Debug: dump HTML to file for Safari inspection
     std::fs::write("preview/live.html", &preview_html).ok();
+
+    // Also dump settings page for preview
+    let settings_html = render::render_settings();
+    std::fs::write("preview/settings.html", &settings_html).ok();
+
+    let lock_html = render::render_lock_screen();
+    std::fs::write("preview/lock.html", &lock_html).ok();
     let _webview = WebViewBuilder::new()
         .with_html(&preview_html)
         .with_ipc_handler(|msg: wry::http::Request<String>| {
-            eprintln!("[collet-shell] IPC: {}", msg.body());
+            let response = ipc::handler::handle(msg.body());
+            eprintln!("[collet-shell] IPC: {} → {}", msg.body(), response);
         })
         .build(&window)
         .unwrap();

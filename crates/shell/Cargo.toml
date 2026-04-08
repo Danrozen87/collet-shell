@@ -28,6 +28,9 @@ components = { path = "../../../../lab/rust-frontend/crates/components" }
 design-system = { path = "../../../../lab/rust-frontend/crates/design-system" }
 rr-core = { path = "../../../../lab/rust-frontend/crates/core", package = "core" }
 
+# App discovery (.desktop files)
+freedesktop-desktop-entry = { version = "0.8", default-features = false }
+
 # Linux-only dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"

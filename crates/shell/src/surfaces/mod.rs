@@ -2,3 +2,4 @@
 
 pub mod control_bar;
 pub mod dock;
+pub mod lock_screen;
